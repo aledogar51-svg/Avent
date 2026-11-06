@@ -1,3 +1,6 @@
+
+app.js
+100 %
 /* ==========================================================
    Calendrier de l'Avent — coquille publique (aucun contenu ici)
    Le contenu personnel est servi par le Google Sheet privé,
@@ -14,7 +17,7 @@ const Avent = (() => {
   const K_OUVERT='avent_ouverts', K_DEMO='avent_demo', K_CODE='avent_code', K_TYPES='avent_types';
   const lire = (k,d) => { try { const v=localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } };
   const ecrire = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
-  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
   let ouverts = new Set(lire(K_OUVERT, []));
   let types = lire(K_TYPES, {});            // mémorise l'icône des cases déjà ouvertes
@@ -103,8 +106,16 @@ const Avent = (() => {
     if (t==='souvenir') corps = (c.aPhoto ? `<div class="av-photo" data-photo="${n}"><span class="av-charge">✨</span><small>${esc(c.legende||'')}</small></div>`
                                           : `<div class="av-photo"><span>📷</span><small>${esc(c.legende||'')}</small></div>`) + corps;
     if (t==='bon') corps = `<div class="av-bon"><div class="av-bon-titre">BON CADEAU</div><p>${esc(c.texte)}</p><small>${esc(c.valable||'')}</small></div>`;
-    if (t==='musique') corps += c.lien ? `<a class="av-musique" href="${esc(c.lien)}" target="_blank" rel="noopener">▶︎ ${esc(c.morceau||'Écouter')}</a>`
-                                       : `<div class="av-musique">▶︎ ${esc(c.morceau||'')}</div>`;
+    if (t==='musique'){
+      if (c.morceau) corps += `<p class="av-morceau">🎵 ${esc(c.morceau)}</p>`;
+      if (c.deezer){
+        const dz = `${c.deezer.type}/${c.deezer.id}`;
+        corps += `<iframe class="av-deezer" title="Lecteur Deezer" src="https://widget.deezer.com/widget/dark/${dz}?autoplay=true&tracklist=false" allow="autoplay; encrypted-media; clipboard-write" frameborder="0"></iframe>
+                  <a class="av-musique" href="https://www.deezer.com/${dz}" target="_blank" rel="noopener">▶︎ Écouter en entier dans Deezer</a>`;
+      } else if (c.lien && /^https?:/.test(c.lien)) {
+        corps += `<a class="av-musique" href="${esc(c.lien)}" target="_blank" rel="noopener">▶︎ Écouter</a>`;
+      }
+    }
     if (t==='quiz') corps = `<p class="av-texte">${esc(c.question)}</p><div class="av-quiz">` +
       (c.choix||[]).map((x,i)=>`<button data-i="${i}">${esc(x)}</button>`).join('') + `</div><p class="av-quiz-res"></p>`;
     return `<div class="av-tag">${ICONES[t]} ${LIBELLES[t]} · ${n} décembre</div><h2 class="av-titre">${esc(c.titre)}</h2>${corps}`;
@@ -115,7 +126,7 @@ const Avent = (() => {
     try{
       const r = await fetch(`${SCRIPT_URL}?code=${encodeURIComponent(code)}&action=photo&n=${n}`);
       const j = await r.json();
-      if (j.ok){ const leg=el.querySelector('small')?.outerHTML||''; el.classList.add('av-photo-ok'); el.innerHTML=`<img src="${j.photo}" alt="">${leg}`; }
+      if (j.ok){ const sm=el.querySelector('small'); const leg=sm ? sm.outerHTML : ''; el.classList.add('av-photo-ok'); el.innerHTML=`<img src="${j.photo}" alt="">${leg}`; }
       else el.querySelector('.av-charge').textContent='📷';
     }catch(e){ el.querySelector('.av-charge').textContent='📷'; }
   }
@@ -127,7 +138,10 @@ const Avent = (() => {
       modal=document.createElement('div'); modal.className='av-modal';
       modal.innerHTML=`<div class="av-card"><button class="av-fermer" aria-label="Fermer">×</button><div class="av-contenu"></div></div>`;
       document.body.appendChild(modal);
-      modal.addEventListener('click', e=>{ if(e.target===modal||e.target.classList.contains('av-fermer')) modal.classList.remove('on'); });
+      modal.addEventListener('click', e=>{ if(e.target===modal||e.target.classList.contains('av-fermer')){
+        modal.classList.remove('on');
+        setTimeout(()=>{ if(!modal.classList.contains('on')) modal.querySelector('.av-contenu').innerHTML=''; }, 350); // coupe la musique
+      } });
     }
     const zone=modal.querySelector('.av-contenu'); zone.innerHTML=contenuHTML(n);
     const c = donnees && donnees.cases[n];
@@ -193,7 +207,9 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .av-bon{border:2px dashed var(--accent,#b3202a);border-radius:14px;padding:18px;text-align:center}
 .av-bon-titre{font-weight:800;letter-spacing:.2em;color:var(--accent,#b3202a);margin-bottom:8px}
 .av-bon p{font-size:18px;margin:0 0 10px}.av-bon small{opacity:.6}
-.av-musique{display:block;background:rgba(0,0,0,.06);border-radius:30px;padding:12px 18px;font-weight:600;color:inherit;text-decoration:none}
+.av-morceau{font-weight:700;margin:0 0 10px}
+.av-deezer{display:block;width:100%;height:170px;border:0;border-radius:12px;margin:0 0 12px;background:#121216}
+.av-musique{display:block;text-align:center;background:rgba(0,0,0,.06);border-radius:30px;padding:12px 18px;font-weight:600;color:inherit;text-decoration:none}
 .av-quiz{display:grid;gap:8px}
 .av-quiz button{padding:13px;border-radius:12px;border:1.5px solid rgba(0,0,0,.15);background:transparent;font:inherit;font-size:16px;color:inherit;cursor:pointer}
 .av-quiz button.bon{background:#2e7d4f;color:#fff;border-color:#2e7d4f}
@@ -214,3 +230,4 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 @keyframes av-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .shake{animation:av-shake .4s}
 </style>`);
+Affichage de app.js
