@@ -5,7 +5,7 @@
    ========================================================== */
 
 // 👉 Coller ici l'URL de l'application web Google Apps Script (se termine par /exec)
-const SCRIPT_URL = '';
+const SCRIPT_URL = https://script.google.com/macros/s/AKfycbz-EdcwHm_WlT3ovwPPBjcYWRRPL-3lU8VsftkUE46x4Hr6fpvPngeziQi0aCO1vv5TQw/exec;
 
 const ICONES = { mot:'💌', souvenir:'📷', bon:'🎟️', defi:'⭐', musique:'🎵', quiz:'❓', recette:'🍪' };
 const LIBELLES = { mot:'Mot doux', souvenir:'Souvenir', bon:'Bon cadeau', defi:'Défi', musique:'Musique', quiz:'Quiz', recette:'Gourmandise' };
