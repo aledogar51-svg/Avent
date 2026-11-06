@@ -168,8 +168,14 @@ const Avent = (() => {
   function tenter(n, siOk){
     if (etat==='chargement'){ toast('Un instant, je prépare ta surprise…'); return false; }
     if (!peutOuvrir(n)){ toast(`Patience mon amour… cette case s'ouvre le ${n} décembre 🎄`); return false; }
-    const premiere=!estOuvert(n); if(premiere) marquerOuvert(n);
+    const premiere=!estOuvert(n); if(premiere){ marquerOuvert(n); signalerOuverture(n); }
     siOk && siOk(premiere); return true;
+  }
+
+  // Prévient le Google Sheet (journal + mail) à la première ouverture d'une case
+  function signalerOuverture(n){
+    if (!SCRIPT_URL || !code) return;
+    try { fetch(`${SCRIPT_URL}?code=${encodeURIComponent(code)}&action=ouvert&n=${n}`).catch(()=>{}); } catch(e){}
   }
 
   function demarrer(){
