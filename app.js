@@ -1,6 +1,3 @@
-
-app.js
-100 %
 /* ==========================================================
    Calendrier de l'Avent — coquille publique (aucun contenu ici)
    Le contenu personnel est servi par le Google Sheet privé,
@@ -230,4 +227,3 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 @keyframes av-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .shake{animation:av-shake .4s}
 </style>`);
-Affichage de app.js
