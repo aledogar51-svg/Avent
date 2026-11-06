@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1a33">
+<title>Mon calendrier de l'Avent</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mon Avent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,500&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--accent:#b3202a;--font-titre:'Playfair Display',serif;--carte-bg:#fffaf2;--carte-txt:#2a1d16}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:'Nunito',system-ui,sans-serif;color:#f5efe6;background:radial-gradient(120% 80% at 50% 0%,#1f3a66 0%,#0b1a33 55%,#060d1c 100%) fixed;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 90px)}
+#neige{position:fixed;inset:0;pointer-events:none;z-index:0}
+header{position:relative;z-index:1;text-align:center;margin:10px 0 22px}
+header .sur{font-size:13px;letter-spacing:.3em;text-transform:uppercase;opacity:.7}
+h1{font-family:'Playfair Display',serif;font-size:clamp(30px,9vw,44px);margin:6px 0 4px;line-height:1.05}
+h1 em{color:#f3c86b;font-style:italic;font-weight:500}
+.compte{font-size:15px;opacity:.85}
+.grille{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:78px;gap:10px;max-width:520px;margin:0 auto;grid-auto-flow:dense}
+.case{position:relative;perspective:700px;cursor:pointer}
+.case.l{grid-column:span 2}.case.h{grid-row:span 2}
+.dedans,.porte{position:absolute;inset:0;border-radius:12px}
+.dedans{background:#2a1810 radial-gradient(circle at 50% 40%,#5a3420,#1d0f08);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:inset 0 0 18px rgba(0,0,0,.7)}
+.porte{transform-origin:left center;transition:transform .9s cubic-bezier(.3,1.2,.4,1);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.35);backface-visibility:hidden;overflow:hidden}
+.porte::before,.porte::after{content:'';position:absolute;background:var(--ruban)}
+.porte::before{left:50%;top:0;bottom:0;width:10px;transform:translateX(-50%)}
+.porte::after{top:50%;left:0;right:0;height:10px;transform:translateY(-50%)}
+.porte span{position:relative;z-index:1;font-family:'Playfair Display',serif;font-size:24px;font-weight:700;background:var(--papier);padding:2px 9px;border-radius:8px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.c0 .porte{background:#a8192a;--ruban:#f3c86b;--papier:#a8192a}
+.c1 .porte{background:#1f6b45;--ruban:#e9e2d4;--papier:#1f6b45}
+.c2 .porte{background:#e9e2d4;--ruban:#a8192a;--papier:#a8192a}
+.c3 .porte{background:#c99a3e;--ruban:#7e1220;--papier:#7e1220}
+.case.ouverte .porte{transform:rotateY(-108deg)}
+.case.verrou .porte{filter:saturate(.45) brightness(.7)}
+.case.verrou .porte span::after{content:' 🔒';font-size:12px}
+.case.jour .porte{animation:lueur 1.8s ease-in-out infinite}
+@keyframes lueur{50%{box-shadow:0 0 0 3px #f3c86b,0 0 26px 6px rgba(243,200,107,.6)}}
+footer{position:relative;z-index:1;text-align:center;font-size:13px;margin-top:22px;color:rgba(245,239,230,.55)}
+.cle{margin-top:10px;border:1px solid rgba(255,255,255,.25);background:none;color:inherit;border-radius:20px;padding:6px 14px;font:inherit;cursor:pointer}
+</style>
+</head>
+<body>
+<canvas id="neige"></canvas>
+<header>
+  <div class="sur">Pour toi, mon amour</div>
+  <h1>Les nuits <em>de décembre</em></h1>
+  <div class="compte" id="compte"></div>
+</header>
+<main class="grille" id="grille"></main>
+<footer>Une case par jour · touche le cadeau du jour<br><button id="cle" class="cle">🔑 J'ai un code</button></footer>
+
+<script src="app.js"></script>
+<script>
+// Ordre des cases mélangé (fixe) et tailles variées pour un rendu « vrai calendrier »
+const ordre = [7,1,15,22,3,18,10,24,5,12,20,2,16,9,23,6,13,19,4,11,21,8,14,17];
+const grandes = {24:'l h',1:'l',12:'h',18:'l',6:'h',21:'l'};
+const grille = document.getElementById('grille');
+
+ordre.forEach((n,i)=>{
+  const d = document.createElement('div');
+  d.className = `case c${i%4} ${grandes[n]||''}`;
+  d.dataset.n = n;
+  d.innerHTML = `<div class="dedans">🎁</div><div class="porte"><span>${n}</span></div>`;
+  d.onclick = () => {
+    const ok = Avent.tenter(n, premiere => {
+      d.classList.add('ouverte');
+      setTimeout(()=>Avent.ouvrirModal(n), premiere ? 750 : 50);
+    });
+    if(!ok){ d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); }
+  };
+  grille.appendChild(d);
+});
+
+function rafraichir(){
+  const j = Avent.jourActuel();
+  grille.querySelectorAll('.case').forEach(d=>{
+    const n = +d.dataset.n;
+    d.classList.toggle('verrou', !Avent.peutOuvrir(n));
+    d.classList.toggle('ouverte', Avent.estOuvert(n));
+    d.classList.toggle('jour', n===j && !Avent.estOuvert(n));
+    d.querySelector('.dedans').textContent = Avent.icone(n);
+  });
+  const reste = 25 - j;
+  const avant = Math.ceil((new Date(new Date().getFullYear(),11,1) - new Date()) / 864e5);
+  document.getElementById('compte').textContent =
+    j<1 ? (avant>1 ? `Ouverture de la première case dans ${avant} jours ✨` : "Ouverture de la première case demain matin ✨") : reste>0 ? `Plus que ${reste} dodo${reste>1?'s':''} avant Noël ✨` : 'Joyeux Noël ! 🎄';
+}
+Avent.onChange(rafraichir); rafraichir(); Avent.demarrer();
+document.getElementById('cle').onclick = () => Avent.demanderCode();
+
+// Neige
+const cv = document.getElementById('neige'), cx = cv.getContext('2d'); let W,H,flocons=[];
+function taille(){ W=cv.width=innerWidth*devicePixelRatio; H=cv.height=innerHeight*devicePixelRatio; }
+taille(); addEventListener('resize',taille);
+for(let i=0;i<90;i++) flocons.push({x:Math.random(),y:Math.random(),r:Math.random()*2.2+.6,v:Math.random()*.0012+.0006,o:Math.random()*6});
+(function anim(t){
+  cx.clearRect(0,0,W,H); cx.fillStyle='rgba(255,255,255,.85)';
+  flocons.forEach(f=>{ f.y+=f.v; if(f.y>1.02){f.y=-.02;f.x=Math.random();}
+    const x=(f.x+Math.sin(t/1500+f.o)*.01)*W; cx.beginPath(); cx.arc(x,f.y*H,f.r*devicePixelRatio,0,7); cx.fill(); });
+  requestAnimationFrame(anim);
+})(0);
+</script>
+</body>
+</html>
