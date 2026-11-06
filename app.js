@@ -167,7 +167,7 @@ const Avent = (() => {
 
   function tenter(n, siOk){
     if (etat==='chargement'){ toast('Un instant, je prépare ta surprise…'); return false; }
-    if (!peutOuvrir(n)){ toast(`Patience… cette case s'ouvre le ${n} décembre 🎄`); return false; }
+    if (!peutOuvrir(n)){ toast(`Patience mon amour… cette case s'ouvre le ${n} décembre 🎄`); return false; }
     const premiere=!estOuvert(n); if(premiere) marquerOuvert(n);
     siOk && siOk(premiere); return true;
   }
